@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Carbon Footprint Analytics{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card primary">
+            <div class="kpi-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Formula-Based</div>
+                <div class="kpi-value" data-target="{{ results.formula_result.total }}">0</div>
+                <div class="kpi-unit">kg CO₂/month</div>
+            </div>
+        </div>
+
+        <div class="kpi-card secondary">
+            <div class="kpi-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">ML Prediction</div>
+                <div class="kpi-value" data-target="{{ results.ml_prediction }}">0</div>
+                <div class="kpi-unit">kg CO₂/month</div>
+            </div>
+        </div>
+
+        <div class="kpi-card {{ results.category_class }}">
+            <div class="kpi-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Category</div>
+                <div class="kpi-category" style="color: {{ results.category_color }}">
+                    {{ results.category }}
+                </div>
+                <div class="kpi-unit">Emission Level</div>
+            </div>
+        </div>
+
+        <div class="kpi-card info">
+            <div class="kpi-icon">
+                <i class="fas fa-globe"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">vs Average</div>
+                <div class="kpi-value" data-target="{{ results.avg_emissions }}">0</div>
+                <div class="kpi-unit">Global Avg</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Section -->
+    <div class="comparison-section">
+        <div class="glass-card">
+            <h3><i class="fas fa-balance-scale"></i> Model Comparison</h3>
+            <div class="comparison-grid">
+                <div class="comparison-item">
+                    <div class="comparison-label">Difference</div>
+                    <div class="comparison-value">{{ results.comparison.difference }} kg CO₂</div>
+                </div>
+                <div class="comparison-item">
+                    <div class="comparison-label">Error Percentage</div>
+                    <div class="comparison-value">{{ results.comparison.error_percentage }}%</div>
+                </div>
+                <div class="comparison-item">
+                    <div class="comparison-label">Model R² Score</div>
+                    <div class="comparison-value">{{ results.model_metrics.r2_score }}</div>
+                </div>
+                <div class="comparison-item">
+                    <div class="comparison-label">RMSE</div>
+                    <div class="comparison-value">{{ results.model_metrics.rmse }} kg</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bars -->
+    <div class="progress-section">
+        <div class="glass-card">
+            <h3><i class="fas fa-tasks"></i> Emission Breakdown</h3>
+            
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span><i class="fas fa-car"></i> Transport</span>
+                    <span class="progress-value">{{ results.breakdown.transport }} kg CO₂</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ (results.breakdown.transport / results.formula_result.total * 100)|round(2) }}%; background: #ef4444;"></div>
+                </div>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span><i class="fas fa-bolt"></i> Electricity</span>
+                    <span class="progress-value">{{ results.breakdown.electricity }} kg CO₂</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ (results.breakdown.electricity / results.formula_result.total * 100)|round(2) }}%; background: #f59e0b;"></div>
+                </div>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span><i class="fas fa-plane"></i> Flights</span>
+                    <span class="progress-value">{{ results.breakdown.flights }} kg CO₂</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ (results.breakdown.flights / results.formula_result.total * 100)|round(2) }}%; background: #3b82f6;"></div>
+                </div>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span><i class="fas fa-utensils"></i> Diet</span>
+                    <span class="progress-value">{{ results.breakdown.diet }} kg CO₂</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ (results.breakdown.diet / results.formula_result.total * 100)|round(2) }}%; background: #10b981;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+        
+        <!-- Doughnut Chart -->
+        <div class="glass-card chart-card">
+            <h3><i class="fas fa-chart-pie"></i> Emission Distribution</h3>
+            <div class="chart-container">
+                <canvas id="doughnutChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="glass-card chart-card">
+            <h3><i class="fas fa-chart-bar"></i> You vs Average</h3>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Line Chart -->
+        <div class="glass-card chart-card">
+            <h3><i class="fas fa-chart-line"></i> Monthly Trend</h3>
+            <div class="chart-container">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Radar Chart -->
+        <div class="glass-card chart-card">
+            <h3><i class="fas fa-radar"></i> Lifestyle Impact</h3>
+            <div class="chart-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Action Button -->
+    <div class="dashboard-actions">
+        <a href="{{ url_for('suggestions') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-lightbulb"></i>
+            View AI Recommendations
+        </a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Chart data from Flask
+const dashboardChartData = {
+    breakdown: {
+        transport: {{ results.breakdown.transport }},
+        electricity: {{ results.breakdown.electricity }},
+        flights: {{ results.breakdown.flights }},
+        diet: {{ results.breakdown.diet }}
+    },
+    userEmissions: {{ results.formula_result.total }},
+    avgEmissions: {{ results.avg_emissions }},
+    monthlyTrend: {
+        months: {{ results.monthly_trend.months|tojson }},
+        emissions: {{ results.monthly_trend.emissions|tojson }}
+    }
+};
+
+// Animated Counter
+function animateValue(element, start, end, duration) {
+    const range = end - start;
+    const increment = range / (duration / 16);
+    let current = start;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            current = end;
+            clearInterval(timer);
+        }
+        element.textContent = Math.round(current);
+    }, 16);
+}
+
+// Animate KPI values
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.kpi-value').forEach(el => {
+        const target = parseFloat(el.dataset.target);
+        if (!isNaN(target)) {
+            animateValue(el, 0, target, 2000);
+        }
+    });
+});
+
+// Chart colors
+const dashboardChartColors = {
+    primary: 'rgba(14, 165, 233, 0.85)',
+    secondary: 'rgba(139, 92, 246, 0.85)',
+    success: 'rgba(16, 185, 129, 0.85)',
+    warning: 'rgba(245, 158, 11, 0.85)',
+    danger: 'rgba(239, 68, 68, 0.85)'
+};
+
+// Doughnut Chart
+const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+new Chart(doughnutCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Transport', 'Electricity', 'Flights', 'Diet'],
+        datasets: [{
+            data: [
+                dashboardChartData.breakdown.transport,
+                dashboardChartData.breakdown.electricity,
+                dashboardChartData.breakdown.flights,
+                dashboardChartData.breakdown.diet
+            ],
+            backgroundColor: [
+                dashboardChartColors.danger,
+                dashboardChartColors.warning,
+                dashboardChartColors.primary,
+                dashboardChartColors.success
+            ],
+            borderWidth: 3,
+            borderColor: '#1E293B'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#CBD5E1',
+                    padding: 15,
+                    font: { size: 12, family: 'Poppins' }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((context.parsed / total) * 100).toFixed(1);
+                        return `${context.label}: ${context.parsed.toFixed(2)} kg (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Bar Chart
+const barCtx = document.getElementById('barChart').getContext('2d');
+new Chart(barCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Your Emissions', 'Global Average'],
+        datasets: [{
+            label: 'CO₂ Emissions (kg/month)',
+            data: [dashboardChartData.userEmissions, dashboardChartData.avgEmissions],
+            backgroundColor: [dashboardChartColors.primary, dashboardChartColors.secondary],
+            borderRadius: 8,
+            borderSkipped: false
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { color: '#94A3B8' },
+                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+            },
+            x: {
+                ticks: { color: '#94A3B8' },
+                grid: { display: false }
+            }
+        },
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
+
+// Line Chart
+const lineCtx = document.getElementById('lineChart').getContext('2d');
+new Chart(lineCtx, {
+    type: 'line',
+    data: {
+        labels: dashboardChartData.monthlyTrend.months,
+        datasets: [{
+            label: 'Monthly Emissions',
+            data: dashboardChartData.monthlyTrend.emissions,
+            borderColor: dashboardChartColors.primary,
+            backgroundColor: 'rgba(14, 165, 233, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 5,
+            pointHoverRadius: 7
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { color: '#94A3B8' },
+                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+            },
+            x: {
+                ticks: { color: '#94A3B8' },
+                grid: { display: false }
+            }
+        },
+        plugins: {
+            legend: {
+                labels: { color: '#CBD5E1' }
+            }
+        }
+    }
+});
+
+// Radar Chart
+const radarCtx = document.getElementById('radarChart').getContext('2d');
+new Chart(radarCtx, {
+    type: 'radar',
+    data: {
+        labels: ['Transport', 'Electricity', 'Flights', 'Diet'],
+        datasets: [{
+            label: 'Your Impact',
+            data: [
+                Number((dashboardChartData.breakdown.transport / dashboardChartData.userEmissions * 100).toFixed(0)),
+                Number((dashboardChartData.breakdown.electricity / dashboardChartData.userEmissions * 100).toFixed(0)),
+                Number((dashboardChartData.breakdown.flights / dashboardChartData.userEmissions * 100).toFixed(0)),
+                Number((dashboardChartData.breakdown.diet / dashboardChartData.userEmissions * 100).toFixed(0))
+            ],
+            backgroundColor: 'rgba(14, 165, 233, 0.2)',
+            borderColor: dashboardChartColors.primary,
+            borderWidth: 2,
+            pointBackgroundColor: dashboardChartColors.primary
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            r: {
+                beginAtZero: true,
+                ticks: { color: '#94A3B8', backdropColor: 'transparent' },
+                grid: { color: 'rgba(148, 163, 184, 0.2)' },
+                pointLabels: { color: '#CBD5E1', font: { size: 12 } }
+            }
+        },
+        plugins: {
+            legend: {
+                labels: { color: '#CBD5E1' }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Input Data - Carbon Footprint Predictor{% endblock %}
+{% block page_title %}Enter Your Data{% endblock %}
+
+{% block content %}
+<div class="input-page">
+    <div class="input-container">
+        <div class="glass-card">
+            <div class="card-header">
+                <h2><i class="fas fa-keyboard"></i> Enter Your Details</h2>
+                <p>Provide your daily habits to calculate your carbon footprint</p>
+            </div>
+
+            <form id="carbonForm" class="carbon-form">
+                
+                <!-- Distance Input -->
+                <div class="form-group">
+                    <label for="distance">
+                        <i class="fas fa-road"></i>
+                        Daily Travel Distance (km)
+                        <span class="tooltip-icon" data-tooltip="Total distance you travel per day">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </label>
+                    <input type="number" id="distance" name="distance" 
+                           min="0" max="500" value="20" step="0.1" required>
+                    <div class="input-hint">Average: 20-30 km/day</div>
+                </div>
+
+                <!-- Transport Type -->
+                <div class="form-group">
+                    <label for="transport">
+                        <i class="fas fa-car"></i>
+                        Primary Transport Mode
+                    </label>
+                    <div class="select-wrapper">
+                        <select id="transport" name="transport" required>
+                            <option value="walking">🚶 Walking</option>
+                            <option value="bike">🚴 Bike/Bicycle</option>
+                            <option value="public">🚌 Public Transport</option>
+                            <option value="car" selected>🚗 Car</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <!-- Electricity -->
+                <div class="form-group">
+                    <label for="electricity">
+                        <i class="fas fa-bolt"></i>
+                        Monthly Electricity Usage (units)
+                        <span class="tooltip-icon" data-tooltip="Check your electricity bill">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </label>
+                    <input type="number" id="electricity" name="electricity" 
+                           min="0" max="5000" value="300" step="1" required>
+                    <div class="input-hint">Average household: 200-400 units/month</div>
+                </div>
+
+                <!-- Flights -->
+                <div class="form-group">
+                    <label for="flights">
+                        <i class="fas fa-plane"></i>
+                        Flights per Year
+                    </label>
+                    <input type="number" id="flights" name="flights" 
+                           min="0" max="100" value="4" step="1" required>
+                    <div class="input-hint">Include both domestic and international</div>
+                </div>
+
+                <!-- Diet Type -->
+                <div class="form-group">
+                    <label for="diet">
+                        <i class="fas fa-utensils"></i>
+                        Diet Type
+                    </label>
+                    <div class="select-wrapper">
+                        <select id="diet" name="diet" required>
+                            <option value="veg">🥗 Vegetarian</option>
+                            <option value="non-veg" selected>🍖 Non-Vegetarian</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-icon"></i>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-block" id="calculateBtn">
+                        <i class="fas fa-calculator"></i>
+                        <span class="btn-text">Calculate Footprint</span>
+                        <span class="btn-loader"></span>
+                    </button>
+                    <button type="reset" class="btn btn-secondary btn-block">
+                        <i class="fas fa-redo"></i>
+                        Reset Form
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="info-cards">
+            <div class="info-card">
+                <i class="fas fa-info-circle"></i>
+                <h3>How It Works</h3>
+                <p>Our ML model analyzes your input and predicts your carbon footprint using Linear Regression trained on 300+ samples.</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Privacy First</h3>
+                <p>Your data is processed locally and not stored permanently. We respect your privacy.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form submission handler
+document.getElementById('carbonForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const btn = document.getElementById('calculateBtn');
+    const overlay = document.getElementById('loadingOverlay');
+    
+    // Show loading
+    btn.classList.add('loading');
+    overlay.classList.add('active');
+    
+    // Get form data
+    const formData = {
+        distance: parseFloat(document.getElementById('distance').value),
+        transport: document.getElementById('transport').value,
+        electricity: parseFloat(document.getElementById('electricity').value),
+        flights: parseInt(document.getElementById('flights').value),
+        diet: document.getElementById('diet').value
+    };
+    
+    try {
+        const response = await fetch('/calculate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Redirect to dashboard
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 1000);
+        } else {
+            alert('Error: ' + data.error);
+            btn.classList.remove('loading');
+            overlay.classList.remove('active');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        btn.classList.remove('loading');
+        overlay.classList.remove('active');
+    }
+});
+</script>
+{% endblock %}
