@@ -8,7 +8,7 @@ A complete, professional full-stack web application featuring multiple pages, ad
 
 ### 🏠 Multi-Page Structure
 - **Home Page**: Landing page with hero section and features
-- **Input Page**: Clean form for data entry
+- **Input Page**: Clean form for data entries
 - **Dashboard Page**: Advanced analytics with 6+ chart types
 - **Suggestions Page**: AI-powered recommendations
 
